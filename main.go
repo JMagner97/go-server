@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	repository "go-server/Repository"
 	"go-server/controller"
@@ -55,7 +54,8 @@ func main() {
 
 	fmt.Println("Connection string:", psqlInfo)
 
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := repository.NewDatabase("postgres", psqlInfo)
+
 	if err != nil {
 		log.Fatalf("Error opening database: %v\n", err)
 	}

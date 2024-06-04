@@ -26,3 +26,12 @@ type EnrollmentRepo interface {
 	Delete(ctx context.Context, idstudent int, idcourse int)
 	FindAll(ctx context.Context) []model.Enrollment
 }
+
+type UserRepo interface {
+	VerifyCredentials(username string, password string) bool
+	VerifyIsAuthenticated(tokenString string) bool
+	UpdateToken(username string, token string) bool
+	Logout(tokenString string) bool
+	Signup(username string, password string) (bool, error)
+	VerifyUsername(username string) bool
+}

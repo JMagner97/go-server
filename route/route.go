@@ -30,11 +30,12 @@ func NewRouter(studenController *controller.StudentController, courseController 
 	router.POST("/api/course", courseController.Create)
 	router.PATCH("/api/course/:courseid", courseController.Update)
 	router.DELETE("/api/course/:courseid", courseController.Delete)
-	router.POST("/login", wrapHandler(controller.LoginHandler))
-	router.GET("/dashboard", wrapHandler((controller.DashboardHandler)))
+	router.POST("/login", wrapHandler(controller.LoginHandlerToken))
+	router.POST("/SignUp", wrapHandler((controller.SignUp)))
 	router.POST("/logout", wrapHandler(controller.LogoutHandler))
 	router.GET("/api/enrollment", enrollmentController.FindAll)
 	router.POST("/api/enrollment", enrollmentController.Create)
 	router.DELETE("/api/enrollment/:studentid/:courseid", enrollmentController.Delete)
+
 	return router
 }
