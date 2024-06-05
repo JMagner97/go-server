@@ -6,25 +6,25 @@ import (
 )
 
 type StudentRepo interface {
-	Save(ctx context.Context, student model.Student)
-	Update(ctx context.Context, student model.Student)
-	Delete(ctx context.Context, idstudent int)
+	Save(ctx context.Context, student model.Student) (bool, error)
+	Update(ctx context.Context, student model.Student) (bool, error)
+	Delete(ctx context.Context, idstudent int) (bool, error)
 	FindById(ctx context.Context, idstudent int) (model.Student, error)
 	FindAll(ctx context.Context) []model.Student
 }
 
-type CourseRepo interface {
-	Save(ctx context.Context, course model.Course)
-	Update(ctx context.Context, course model.Course)
-	Delete(ctx context.Context, idcourse int)
-	FindById(ctx context.Context, idcourse int) (model.Course, error)
-	FindAll(ctx context.Context) []model.Course
+type LectureRepo interface {
+	Save(ctx context.Context, lecture model.Lectures) (bool, error)
+	Update(ctx context.Context, lecture model.Lectures) (bool, error)
+	Delete(ctx context.Context, lectureid int) (bool, error)
+	FindById(ctx context.Context, lectureid int) (model.Lectures, error)
+	FindAll(ctx context.Context) []model.Lectures
 }
 
-type EnrollmentRepo interface {
-	Save(ctx context.Context, enrollment model.Enrollment)
-	Delete(ctx context.Context, idstudent int, idcourse int)
-	FindAll(ctx context.Context) []model.Enrollment
+type StudentLectureRepo interface {
+	Save(ctx context.Context, enrollment model.StudentLectures) (bool, error)
+	Delete(ctx context.Context, idstudent int, idcourse int) (bool, error)
+	FindAll(ctx context.Context) []model.StudentLectures
 }
 
 type UserRepo interface {

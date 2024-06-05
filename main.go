@@ -7,8 +7,8 @@ import (
 	"go-server/helper"
 	"go-server/route"
 	"go-server/service"
-	"go-server/service/course"
 	"go-server/service/enrollment"
+	"go-server/service/lectures"
 	"log"
 	"net/http"
 
@@ -71,17 +71,17 @@ func main() {
 	//studentRepo := repository.StudentRepo.
 	//repository
 	studentRepo := repository.NewStudRepo(db)
-	courseRepo := repository.NewCourseRepo(db)
-	enrollmentRepo := repository.NewEnrollmentRepo(db)
+	lectureRepo := repository.NewLectureRepo(db)
+	enrollmentRepo := repository.NewStudentLectureRepo(db)
 	//servizio
 	studentService := service.NewStudentServiceImpl(studentRepo)
-	coursesService := course.NewCourseServiceImpl(courseRepo)
-	enrollmentService := enrollment.NewEnrollmentServiceImpl(enrollmentRepo)
+	lecturesService := lectures.NewLectureServiceImpl(lectureRepo)
+	enrollmentService := enrollment.NewStudentLectureServiceImpl(enrollmentRepo)
 	//controller
 	studentController := controller.NewStudentController(studentService)
-	courseController := controller.NewCourseController(coursesService)
-	enrollmentController := controller.NewEnrollmentController(enrollmentService)
-	routes := route.NewRouter(studentController, courseController, enrollmentController)
+	lecturesController := controller.NewLecturesController(lecturesService)
+	enrollmentController := controller.NewStudentLectureController(enrollmentService)
+	routes := route.NewRouter(studentController, lecturesController, enrollmentController)
 
 	server := http.Server{Addr: "localhost:8888", Handler: routes}
 	errx := server.ListenAndServe()

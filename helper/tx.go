@@ -2,13 +2,13 @@ package helper
 
 import "database/sql"
 
-func CommirOrRollback(tx *sql.Tx) {
+func CommirOrRollback(tx *sql.Tx) error {
 	err := recover()
 	if err != nil {
 		errRollback := tx.Rollback()
-		PanicIfError(errRollback)
+		return errRollback
 	} else {
 		errCommit := tx.Commit()
-		PanicIfError(errCommit)
+		return errCommit
 	}
 }

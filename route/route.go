@@ -14,7 +14,7 @@ func wrapHandler(handler http.HandlerFunc) httprouter.Handle {
 	}
 }
 
-func NewRouter(studenController *controller.StudentController, courseController *controller.CourseController, enrollmentController *controller.EnrollmentController) *httprouter.Router {
+func NewRouter(studenController *controller.StudentController, lecturesController *controller.LectureController, enrollmentController *controller.LectureStudentController) *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Fprint(w, "Welcome Home")
@@ -25,17 +25,17 @@ func NewRouter(studenController *controller.StudentController, courseController 
 	router.POST("/api/student", studenController.Create)
 	router.PATCH("/api/student/:idstudente", studenController.Update)
 	router.DELETE("/api/student/:idstudente", studenController.Delete)
-	router.GET("/api/course", courseController.FindAll)
-	router.GET("/api/course/:courseid", courseController.FindById)
-	router.POST("/api/course", courseController.Create)
-	router.PATCH("/api/course/:courseid", courseController.Update)
-	router.DELETE("/api/course/:courseid", courseController.Delete)
+	router.GET("/api/lecture", lecturesController.FindAll)
+	router.GET("/api/lecture/:lectureid", lecturesController.FindById)
+	router.POST("/api/lecture", lecturesController.Create)
+	router.PATCH("/api/lecture/:lectureid", lecturesController.Update)
+	router.DELETE("/api/lecture/:lectureid", lecturesController.Delete)
 	router.POST("/login", wrapHandler(controller.LoginHandlerToken))
 	router.POST("/SignUp", wrapHandler((controller.SignUp)))
 	router.POST("/logout", wrapHandler(controller.LogoutHandler))
 	router.GET("/api/enrollment", enrollmentController.FindAll)
 	router.POST("/api/enrollment", enrollmentController.Create)
-	router.DELETE("/api/enrollment/:studentid/:courseid", enrollmentController.Delete)
+	router.DELETE("/api/enrollment/:studentid/:lectureid", enrollmentController.Delete)
 
 	return router
 }

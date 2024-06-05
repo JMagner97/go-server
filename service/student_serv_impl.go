@@ -6,7 +6,6 @@ import (
 	repository "go-server/Repository"
 	"go-server/data/request"
 	"go-server/data/response"
-	"go-server/helper"
 )
 
 type StudentServiceImpl struct {
@@ -18,23 +17,28 @@ func NewStudentServiceImpl(studentrepo repository.StudentRepo) StudentService {
 }
 
 // Create implements StudentService.
-func (b *StudentServiceImpl) Create(ctx context.Context, request request.StudentCreateRequest) {
+func (b *StudentServiceImpl) Create(ctx context.Context, request request.StudentCreateRequest) (bool, error) {
 	student := Model.Student{
-		Name:      request.Name,
-		Id:        request.Id,
-		Surname:   request.Surname,
-		Birthdate: request.Data,
-		Email:     request.Email,
-		Address:   request.Address,
+		Name:         request.Name,
+		Id:           request.Id,
+		Surname:      request.Surname,
+		Birthdate:    request.Data,
+		Email:        request.Email,
+		Address:      request.Address,
+		DepartmentId: request.DepartmentId,
 	}
-	b.StudentRepo.Save(ctx, student)
+	result, err := b.StudentRepo.Save(ctx, student)
+	return result, err
 }
 
 // Delete implements StudentService.
-func (b *StudentServiceImpl) Delete(ctx context.Context, studentid int) {
+func (b *StudentServiceImpl) Delete(ctx context.Context, studentid int) (bool, error) {
 	student, err := b.StudentRepo.FindById(ctx, studentid)
-	helper.PanicIfError(err)
-	b.StudentRepo.Delete(ctx, student.Id)
+	if err != nil {
+		return false, err
+	}
+	result, errx := b.StudentRepo.Delete(ctx, student.Id)
+	return result, errx
 }
 
 // FindAll implements StudentService.
@@ -42,35 +46,41 @@ func (b *StudentServiceImpl) FindAll(ctx context.Context) []response.StudentResp
 	student := b.StudentRepo.FindAll(ctx)
 	var studentRespo []response.StudentResponse
 	for _, value := range student {
-		student := response.StudentResponse{Id: value.Id, Name: value.Name, Surname: value.Surname, Data: value.Birthdate, Address: value.Address, Email: value.Email}
+		student := response.StudentResponse{Id: value.Id, Name: value.Name, Surname: value.Surname, Data: value.Birthdate, Address: value.Address, Email: value.Email, DepartmentId: value.DepartmentId}
 		studentRespo = append(studentRespo, student)
 	}
 	return studentRespo
 }
 
 // FindById implements StudentService.
-func (b *StudentServiceImpl) FindById(ctx context.Context, studentid int) response.StudentResponse {
+func (b *StudentServiceImpl) FindById(ctx context.Context, studentid int) (response.StudentResponse, error) {
 	student, err := b.StudentRepo.FindById(ctx, studentid)
-	helper.PanicIfError(err)
+	//helper.PanicIfError(err)
 	studentResponse := response.StudentResponse{
-		Id:      student.Id,
-		Name:    student.Name,
-		Surname: student.Surname,
-		Data:    student.Birthdate,
-		Address: student.Address,
-		Email:   student.Email,
+		Id:           student.Id,
+		Name:         student.Name,
+		Surname:      student.Surname,
+		Data:         student.Birthdate,
+		Address:      student.Address,
+		Email:        student.Email,
+		DepartmentId: student.DepartmentId,
 	}
-	return studentResponse
+	return studentResponse, err
 }
 
 // Update implements StudentService.
-func (b *StudentServiceImpl) Update(ctx context.Context, request request.StudentUpdateRequest) {
+func (b *StudentServiceImpl) Update(ctx context.Context, request request.StudentUpdateRequest) (bool, error) {
 	student, err := b.StudentRepo.FindById(ctx, request.Id)
-	helper.PanicIfError(err)
+	//helper.PanicIfError(err)
+	if err != nil {
+		return false, err
+	}
 	student.Name = request.Name
 	student.Surname = request.Surname
 	student.Birthdate = request.Data
 	student.Address = request.Address
 	student.Email = request.Email
-	b.StudentRepo.Update(ctx, student)
+	student.DepartmentId = request.DepartmentId
+	result, errx := b.StudentRepo.Update(ctx, student)
+	return result, errx
 }

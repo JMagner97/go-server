@@ -15,7 +15,7 @@ type UserAuthentication struct {
 }
 
 func GenerateJWTToken(username string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(5 * time.Hour)
 	userAuth := &UserAuthentication{
 		Username: username,
 		StandardClaims: jwt.StandardClaims{
