@@ -1,10 +1,11 @@
 package Model
 
 type Lectures struct {
-	LectureId   int
-	LectureName string
-	StartYear   int
-	EndYear     int
-	Description string
-	ProfessorId int
+	LectureId    int
+	LectureName  string
+	StartYear    int
+	EndYear      int
+	Description  string
+	ProfessorId  int
+	DepartmentId int
 }

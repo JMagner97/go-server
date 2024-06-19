@@ -29,12 +29,13 @@ func (s *LectureServiceImpl) FindAll(ctx context.Context) []response.LectureResp
 	var lectureRespo []response.LectureResponse
 	for _, value := range lecture {
 		lecture := response.LectureResponse{
-			LectureId:   value.LectureId,
-			LectureName: value.LectureName,
-			StartYear:   value.StartYear,
-			EndYear:     value.EndYear,
-			Description: value.Description,
-			ProfessorId: value.ProfessorId,
+			LectureId:    value.LectureId,
+			LectureName:  value.LectureName,
+			StartYear:    value.StartYear,
+			EndYear:      value.EndYear,
+			Description:  value.Description,
+			ProfessorId:  value.ProfessorId,
+			DepartmentId: value.DepartmentId,
 		}
 		lectureRespo = append(lectureRespo, lecture)
 	}
@@ -46,12 +47,13 @@ func (s *LectureServiceImpl) FindById(ctx context.Context, idcourse int) (respon
 	lecture, err := s.lectureRepo.FindById(ctx, idcourse)
 	//helper.PanicIfError(err)
 	lectureResponse := response.LectureResponse{
-		LectureId:   lecture.LectureId,
-		LectureName: lecture.LectureName,
-		StartYear:   lecture.StartYear,
-		EndYear:     lecture.EndYear,
-		Description: lecture.Description,
-		ProfessorId: lecture.ProfessorId,
+		LectureId:    lecture.LectureId,
+		LectureName:  lecture.LectureName,
+		StartYear:    lecture.StartYear,
+		EndYear:      lecture.EndYear,
+		Description:  lecture.Description,
+		ProfessorId:  lecture.ProfessorId,
+		DepartmentId: lecture.DepartmentId,
 	}
 	return lectureResponse, err
 }
@@ -59,12 +61,13 @@ func (s *LectureServiceImpl) FindById(ctx context.Context, idcourse int) (respon
 // Save implements CourseService.
 func (s *LectureServiceImpl) Create(ctx context.Context, request request.LectureCreateRequest) (bool, error) {
 	lecture := Model.Lectures{
-		LectureId:   request.LectureId,
-		LectureName: request.LectureName,
-		StartYear:   request.StartYear,
-		EndYear:     request.EndYear,
-		Description: request.Description,
-		ProfessorId: request.ProfessorId,
+		LectureId:    request.LectureId,
+		LectureName:  request.LectureName,
+		StartYear:    request.StartYear,
+		EndYear:      request.EndYear,
+		Description:  request.Description,
+		ProfessorId:  request.ProfessorId,
+		DepartmentId: request.DepartmentId,
 	}
 	result, err := s.lectureRepo.Save(ctx, lecture)
 	return result, err
@@ -82,6 +85,7 @@ func (s *LectureServiceImpl) Update(ctx context.Context, request request.Lecture
 	lecture.EndYear = request.EndYear
 	lecture.Description = request.Description
 	lecture.ProfessorId = request.ProfessorId
+	lecture.DepartmentId = request.DepartmentId
 	result, errx := s.lectureRepo.Update(ctx, lecture)
 	return result, errx
 }

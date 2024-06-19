@@ -30,17 +30,33 @@ func (s *studentlectureRepo) FindAll(ctx context.Context) []Model.StudentLecture
 	helper.PanicIfError(err)
 	defer helper.CommirOrRollback(tx)
 	SQL := `
-	Select students.name, surname, email,lectures.name,startyear, endyear 
-				from studentlectures 
-					 join students on studentlectures.studentid = students.studentid 
-					 join lectures on studentlectures.lectureid = lectures.lectureid`
+	SELECT 
+    students.name AS student_name,
+    students.surname,
+    students.email,
+    lectures.name AS lecture_name,
+    lectures.startyear,
+    lectures.endyear,
+    professors.surname AS professors_surname,
+    departments.name AS department_name
+	FROM 
+   	 studentlectures
+	JOIN 
+    	students ON studentlectures.studentid = students.studentid
+	JOIN 
+    	lectures ON studentlectures.lectureid = lectures.lectureid
+	JOIN 
+    	professors ON lectures.professorid = professors.professorid
+	JOIN 
+    	departments ON lectures.departmentid = departments.departmentid;
+`
 	result, err := tx.QueryContext(ctx, SQL)
 	helper.PanicIfError(err)
 	defer result.Close()
 	var studentlectures []Model.StudentLectures
 	for result.Next() {
 		studentlecture := Model.StudentLectures{}
-		err := result.Scan(&studentlecture.Student.Name, &studentlecture.Student.Surname, &studentlecture.Lecture.LectureName, &studentlecture.Student.Email, &studentlecture.Lecture.StartYear, &studentlecture.Lecture.EndYear)
+		err := result.Scan(&studentlecture.Student.Name, &studentlecture.Student.Surname, &studentlecture.Student.Email, &studentlecture.Lecture.LectureName, &studentlecture.Lecture.StartYear, &studentlecture.Lecture.EndYear, &studentlecture.Professor.Surname, &studentlecture.Department.Name)
 		helper.PanicIfError(err)
 		studentlectures = append(studentlectures, studentlecture)
 	}

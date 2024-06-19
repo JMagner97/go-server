@@ -44,6 +44,14 @@ func (s *StudentLectureServiceImpl) FindAll(ctx context.Context) ([]*Model.Stude
 				Description: value.Lecture.Description,
 				ProfessorId: value.Lecture.ProfessorId,
 			},
+			Professor: Model.Professor{
+				ProfessorId: value.Professor.ProfessorId,
+				Surname:     value.Professor.Surname,
+			},
+			Department: Model.Department{
+				DepartmentId: value.Department.DepartmentId,
+				Name:         value.Department.Name,
+			},
 		}
 		response = append(response, enrollment)
 	}

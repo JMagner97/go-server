@@ -36,7 +36,7 @@ func (s *lectureRepo) FindAll(ctx context.Context) []model.Lectures {
 	var lectures []model.Lectures
 	for result.Next() {
 		lecture := model.Lectures{}
-		err = result.Scan(&lecture.LectureId, &lecture.LectureName, &lecture.Description, &lecture.StartYear, &lecture.EndYear, &lecture.ProfessorId)
+		err = result.Scan(&lecture.LectureId, &lecture.LectureName, &lecture.Description, &lecture.StartYear, &lecture.EndYear, &lecture.ProfessorId, &lecture.DepartmentId)
 		helper.PanicIfError(err)
 		lectures = append(lectures, lecture)
 	}
@@ -54,7 +54,7 @@ func (s *lectureRepo) FindById(ctx context.Context, idcourse int) (model.Lecture
 	defer result.Close()
 	lectures := model.Lectures{}
 	if result.Next() {
-		err = result.Scan(&lectures.LectureId, &lectures.LectureName, &lectures.Description, &lectures.StartYear, &lectures.EndYear, &lectures.ProfessorId)
+		err = result.Scan(&lectures.LectureId, &lectures.LectureName, &lectures.Description, &lectures.StartYear, &lectures.EndYear, &lectures.ProfessorId, &lectures.DepartmentId)
 		helper.PanicIfError(err)
 		return lectures, nil
 	} else {
@@ -68,8 +68,8 @@ func (s *lectureRepo) Save(ctx context.Context, lectures model.Lectures) (bool, 
 	helper.PanicIfError(err)
 	defer helper.CommirOrRollback(tx)
 
-	SQL := "insert into lectures(lectureid, name, startyear, endyear, description, professorid) values ($1,$2,$3,$4,$5,$6)"
-	_, err = tx.ExecContext(ctx, SQL, lectures.LectureId, lectures.LectureName, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId)
+	SQL := "insert into lectures(lectureid, name, startyear, endyear, description, professorid, departmentid) values ($1,$2,$3,$4,$5,$6,$7)"
+	_, err = tx.ExecContext(ctx, SQL, lectures.LectureId, lectures.LectureName, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId, lectures.DepartmentId)
 	helper.PanicIfError(err)
 
 	if err != nil {
@@ -84,8 +84,8 @@ func (s *lectureRepo) Update(ctx context.Context, lectures model.Lectures) (bool
 	tx, err := s.db.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommirOrRollback(tx)
-	sql := "update lectures set name=$1, startyear=$2, endyear=$3, description=$4, professorid=$5 where lectureid=$6"
-	_, err = tx.ExecContext(ctx, sql, lectures.LectureName, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId, lectures.LectureId)
+	sql := "update lectures set name=$1, startyear=$2, endyear=$3, description=$4, professorid=$5, departmentid=$6 where lectureid=$7"
+	_, err = tx.ExecContext(ctx, sql, lectures.LectureName, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId, lectures.DepartmentId, lectures.LectureId)
 	helper.PanicIfError(err)
 	if err != nil {
 		return false, err

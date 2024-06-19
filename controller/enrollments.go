@@ -71,12 +71,14 @@ func (controller *LectureStudentController) FindAll(writer http.ResponseWriter, 
 		var enrollmentResponses []response.EnrollmentResponse
 		for i := 0; i < len(enrollment); i++ {
 			enrollmentResponse := response.EnrollmentResponse{
-				Name:        enrollment[i].Student.Name,
-				Surname:     enrollment[i].Student.Surname,
-				Email:       enrollment[i].Student.Email,
-				LectureName: enrollment[i].Lecture.LectureName,
-				StartYear:   enrollment[i].Lecture.StartYear,
-				EndYear:     enrollment[i].Lecture.EndYear,
+				Name:             enrollment[i].Student.Name,
+				Surname:          enrollment[i].Student.Surname,
+				Email:            enrollment[i].Student.Email,
+				LectureName:      enrollment[i].Lecture.LectureName,
+				StartYear:        enrollment[i].Lecture.StartYear,
+				EndYear:          enrollment[i].Lecture.EndYear,
+				ProfessorSurname: enrollment[i].Professor.Surname,
+				DepartmentName:   enrollment[i].Department.Name,
 			}
 			enrollmentResponses = append(enrollmentResponses, enrollmentResponse)
 		}
