@@ -4,7 +4,6 @@ import (
 	"fmt"
 	repository "go-server/Repository"
 	utility "go-server/Utility"
-	"go-server/data/response"
 	helper "go-server/helper"
 	"net/http"
 	"os"
@@ -67,9 +66,14 @@ func LoginHandlerToken(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var maps = make(map[string]string)
-		maps["token"] = tokenString
-		helper.WriteResponse(w, maps)
+		webResponse := helper.WebResponse{
+			Status: "ok",
+			Data: map[string]string{
+				"token": tokenString,
+			},
+		}
+		helper.WriteResponse(w, webResponse, http.StatusOK)
+
 	} else {
 		http.Error(w, "user is not found or invalid password", http.StatusNotFound)
 		return
@@ -87,26 +91,23 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if lentoken > 1 {
 		verified := repository.UserRepo.Logout(user_repo, splitToken[1])
 		if verified {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
 				Status: "ok",
 			}
-			helper.WriteResponse(w, webRepo)
+			helper.WriteResponse(w, webRepo, http.StatusOK)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error",
 			}
 
-			helper.WriteResponse(w, webRepo)
+			helper.WriteResponse(w, webRepo, http.StatusBadRequest)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error",
 		}
 
-		helper.WriteResponse(w, webRepo)
+		helper.WriteResponse(w, webRepo, http.StatusBadRequest)
 	}
 }
 
@@ -131,24 +132,22 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 		verified, error := repository.UserRepo.Signup(user_repo, username, password)
 		if verified {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
+
 				Status: "ok",
 			}
-			helper.WriteResponse(w, webRepo)
+			helper.WriteResponse(w, webRepo, http.StatusCreated)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Internal Server Error",
 				Data:   error,
 			}
-			helper.WriteResponse(w, webRepo)
+			helper.WriteResponse(w, webRepo, http.StatusBadRequest)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Username already exists",
 		}
-		helper.WriteResponse(w, webRepo)
+		helper.WriteResponse(w, webRepo, http.StatusConflict)
 	}
 }

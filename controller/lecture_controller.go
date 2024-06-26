@@ -2,7 +2,6 @@ package controller
 
 import (
 	"go-server/data/request"
-	"go-server/data/response"
 	"go-server/helper"
 	"go-server/service"
 	lecture "go-server/service/lectures"
@@ -29,27 +28,24 @@ func (controller *LectureController) Create(writer http.ResponseWriter, requests
 		helper.ReadRequestBody(requests, &courseRequest)
 		result, errx := controller.lectureService.Create(requests.Context(), courseRequest)
 		if result {
-			WebResponse := response.WebResponse{
-				Code:   200,
+			WebResponse := helper.WebResponse{
 				Status: "ok",
 				Data:   nil,
 			}
-			helper.WriteResponse(writer, WebResponse)
+			helper.WriteResponse(writer, WebResponse, http.StatusCreated)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error during create",
 				Data:   errx,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
 
@@ -64,27 +60,27 @@ func (controller *LectureController) Update(writer http.ResponseWriter, requests
 		lectureUpdate.LectureId = id
 		result, errx := controller.lectureService.Update(requests.Context(), lectureUpdate)
 		if result {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
+
 				Status: "ok",
 				Data:   nil,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
+
 				Status: "Error during update",
 				Data:   errx,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
+
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
 
@@ -96,27 +92,24 @@ func (controller *LectureController) Delete(writer http.ResponseWriter, requests
 		helper.PanicIfError(err)
 		result, errx := controller.lectureService.Delete(requests.Context(), id)
 		if result {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
 				Status: "ok",
 				Data:   nil,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error during delete",
 				Data:   errx,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
 
@@ -124,19 +117,17 @@ func (controller *LectureController) FindAll(writer http.ResponseWriter, request
 	valid := service.CheckToken(requests)
 	if valid {
 		result := controller.lectureService.FindAll(requests.Context())
-		webRepo := response.WebResponse{
-			Code:   200,
+		webRepo := helper.WebResponse{
 			Status: "ok",
 			Data:   result,
 		}
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusOK)
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
 
@@ -148,26 +139,23 @@ func (controller *LectureController) FindById(writer http.ResponseWriter, reques
 		helper.PanicIfError(err)
 		result, errx := controller.lectureService.FindById(requests.Context(), id)
 		if errx != nil {
-			webRepo := response.WebResponse{
-				Code:   404,
+			webRepo := helper.WebResponse{
 				Status: "Lectures not found",
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
 				Status: "ok",
 				Data:   result,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusOK)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 
 }

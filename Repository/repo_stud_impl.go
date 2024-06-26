@@ -51,7 +51,7 @@ func (s *repo_stud_impl) FindAll(ctx context.Context) []Model.Student {
 		students = append(students, student)
 	}
 	return students
-}
+} //pagination
 
 // FindById implements StudentRepo.
 func (s *repo_stud_impl) FindById(ctx context.Context, idstudent int) (Model.Student, error) {
@@ -60,14 +60,17 @@ func (s *repo_stud_impl) FindById(ctx context.Context, idstudent int) (Model.Stu
 	defer helper.CommirOrRollback(tx)
 	SQL := "Select * from students where studentid = $1"
 	result, errx := tx.QueryContext(ctx, SQL, idstudent)
-	helper.PanicIfError(errx)
-	defer result.Close()
-	student := Model.Student{}
+	//helper.PanicIfError(errx)
 
+	student := Model.Student{}
+	if errx != nil {
+		return student, errx
+	}
+	defer result.Close()
 	if result.Next() {
 		err := result.Scan(&student.Id, &student.Name, &student.Surname, &student.Birthdate, &student.Address, &student.Email, &student.DepartmentId)
-		helper.PanicIfError(err)
-		return student, nil
+		//helper.PanicIfError(err)
+		return student, err
 	} else {
 		return student, errors.New("student not found")
 	}

@@ -31,27 +31,26 @@ func (controller *LectureStudentController) Create(writer http.ResponseWriter, r
 		}
 		result, errx := controller.StudentLectureService.Create(requests.Context(), enrollment)
 		if result {
-			WebResponse := response.WebResponse{
-				Code:   200,
-				Status: "ok",
-				Data:   nil,
+			WebResponse := helper.WebResponse{
+				Status: "success",
+				//Data:   result,
 			}
-			helper.WriteResponse(writer, WebResponse)
+			helper.WriteResponse(writer, WebResponse, http.StatusCreated)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
+
 				Status: "Error during insert",
 				Data:   errx,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 		}
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
+
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
 func (controller *LectureStudentController) FindAll(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
@@ -59,12 +58,11 @@ func (controller *LectureStudentController) FindAll(writer http.ResponseWriter, 
 	if valid {
 		enrollment, errx := controller.StudentLectureService.FindAll(requests.Context())
 		if errx != nil {
-			webRepo := response.WebResponse{
-				Code:   500,
+			webRepo := helper.WebResponse{
 				Status: "error",
 				Data:   errx.Error(),
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 			return
 		}
 
@@ -83,20 +81,18 @@ func (controller *LectureStudentController) FindAll(writer http.ResponseWriter, 
 			enrollmentResponses = append(enrollmentResponses, enrollmentResponse)
 		}
 
-		webRepo := response.WebResponse{
-			Code:   200,
+		webRepo := helper.WebResponse{
 			Status: "ok",
 			Data:   enrollmentResponses,
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusOK)
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 
 	}
 }
@@ -108,22 +104,20 @@ func (controller *LectureStudentController) Delete(writer http.ResponseWriter, r
 		lectureid := params.ByName("lectureid")
 		s_id, err := strconv.Atoi(studentid)
 		if err != nil {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error during parsing studentid",
 				Data:   err,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 			return
 		}
 		c_id, err := strconv.Atoi(lectureid)
 		if err != nil {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error during parsing lectureid",
 				Data:   err,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 			return
 		}
 
@@ -134,27 +128,24 @@ func (controller *LectureStudentController) Delete(writer http.ResponseWriter, r
 		helper.PanicIfError(err)
 		result, err := controller.StudentLectureService.Delete(requests.Context(), enrollment)
 		if result {
-			webRepo := response.WebResponse{
-				Code:   200,
+			webRepo := helper.WebResponse{
 				Status: "ok",
 				Data:   nil,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 		} else {
-			webRepo := response.WebResponse{
-				Code:   403,
+			webRepo := helper.WebResponse{
 				Status: "Error during delete",
 				Data:   err,
 			}
-			helper.WriteResponse(writer, webRepo)
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		}
 
 	} else {
-		webRepo := response.WebResponse{
-			Code:   403,
+		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
-		helper.WriteResponse(writer, webRepo)
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
