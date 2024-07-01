@@ -8,7 +8,6 @@ import (
 	"go-server/service"
 	"go-server/service/enrollment"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -26,21 +25,40 @@ func (controller *LectureStudentController) Create(writer http.ResponseWriter, r
 		enrollmentRequest := request.EnrollmentRequest{}
 		helper.ReadRequestBody(requests, &enrollmentRequest)
 		enrollment := &Model.StudentLectures{
-			Student: Model.Student{Id: enrollmentRequest.StudentId},
-			Lecture: Model.Lectures{LectureId: enrollmentRequest.LectureId},
+			Student: Model.Student{Email: enrollmentRequest.StudentEmail},
+			Lecture: Model.Lectures{LectureName: enrollmentRequest.LectureName},
 		}
 		result, errx := controller.StudentLectureService.Create(requests.Context(), enrollment)
 		if result {
-			WebResponse := helper.WebResponse{
-				Status: "success",
-				//Data:   result,
+			result1, err := controller.StudentLectureService.FindById(requests.Context(), enrollment)
+			if err != nil {
+				WebResponse := helper.WebResponse{
+					Status: err.Error(),
+					//Data:   enrollmentResponse,
+				}
+				helper.WriteResponse(writer, WebResponse, http.StatusNotFound)
+			} else {
+				enrollmentResponse := response.EnrollmentResponse{
+					Name:             result1.Name,
+					Surname:          result1.Surname,
+					Email:            result1.Email,
+					LectureName:      result1.LectureName,
+					StartYear:        result1.StartYear,
+					EndYear:          result1.EndYear,
+					ProfessorSurname: result1.ProfessorSurname,
+					DepartmentName:   result1.DepartmentName,
+				}
+				WebResponse := helper.WebResponse{
+					Status: "created",
+					Data:   enrollmentResponse,
+				}
+				helper.WriteResponse(writer, WebResponse, http.StatusCreated)
 			}
-			helper.WriteResponse(writer, WebResponse, http.StatusCreated)
 		} else {
 			webRepo := helper.WebResponse{
 
-				Status: "Error during insert",
-				Data:   errx,
+				//Status: "Error during insert",
+				Status: errx.Error(),
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 		}
@@ -100,33 +118,23 @@ func (controller *LectureStudentController) FindAll(writer http.ResponseWriter, 
 func (controller *LectureStudentController) Delete(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
 	valid := service.CheckToken(requests)
 	if valid {
-		studentid := params.ByName("studentid")
-		lectureid := params.ByName("lectureid")
-		s_id, err := strconv.Atoi(studentid)
-		if err != nil {
+		email := params.ByName("email")
+		name := params.ByName("name")
+		if email == "" || name == "" {
 			webRepo := helper.WebResponse{
-				Status: "Error during parsing studentid",
-				Data:   err,
-			}
-			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
-			return
-		}
-		c_id, err := strconv.Atoi(lectureid)
-		if err != nil {
-			webRepo := helper.WebResponse{
-				Status: "Error during parsing lectureid",
-				Data:   err,
+				//Status: "Error",
+				Status: "Error in parameters",
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 			return
 		}
 
-		enrollment := &Model.StudentLectures{
-			Student: Model.Student{Id: s_id},
-			Lecture: Model.Lectures{LectureId: c_id},
-		}
-		helper.PanicIfError(err)
-		result, err := controller.StudentLectureService.Delete(requests.Context(), enrollment)
+		//	enrollment := &Model.StudentLectures{
+		//		Student: Model.Student{Email: email},
+		//		Lecture: Model.Lectures{LectureName: name},
+		//	}
+
+		result, err := controller.StudentLectureService.Delete(requests.Context(), email, name)
 		if result {
 			webRepo := helper.WebResponse{
 				Status: "ok",
@@ -135,8 +143,8 @@ func (controller *LectureStudentController) Delete(writer http.ResponseWriter, r
 			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 		} else {
 			webRepo := helper.WebResponse{
-				Status: "Error during delete",
-				Data:   err,
+				//Status: "Error during delete",
+				Data: err.Error(),
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		}

@@ -2,6 +2,7 @@ package lectures
 
 import (
 	"context"
+	"errors"
 	"go-server/Model"
 	repository "go-server/Repository"
 	"go-server/data/request"
@@ -13,13 +14,13 @@ type LectureServiceImpl struct {
 }
 
 // Delete implements CourseService.
-func (s *LectureServiceImpl) Delete(ctx context.Context, idcourse int) (bool, error) {
-	lecture, err := s.lectureRepo.FindById(ctx, idcourse)
+func (s *LectureServiceImpl) Delete(ctx context.Context, name string) (bool, error) {
+	lecture, err := s.lectureRepo.FindById(ctx, name)
 	//helper.PanicIfError(err)
 	if err != nil {
 		return false, err
 	}
-	result, errx := s.lectureRepo.Delete(ctx, lecture.LectureId)
+	result, errx := s.lectureRepo.Delete(ctx, lecture.LectureName)
 	return result, errx
 }
 
@@ -29,7 +30,7 @@ func (s *LectureServiceImpl) FindAll(ctx context.Context) []response.LectureResp
 	var lectureRespo []response.LectureResponse
 	for _, value := range lecture {
 		lecture := response.LectureResponse{
-			LectureId:    value.LectureId,
+			//LectureId:    value.LectureId,
 			LectureName:  value.LectureName,
 			StartYear:    value.StartYear,
 			EndYear:      value.EndYear,
@@ -43,11 +44,11 @@ func (s *LectureServiceImpl) FindAll(ctx context.Context) []response.LectureResp
 }
 
 // FindById implements CourseService.
-func (s *LectureServiceImpl) FindById(ctx context.Context, idcourse int) (response.LectureResponse, error) {
-	lecture, err := s.lectureRepo.FindById(ctx, idcourse)
+func (s *LectureServiceImpl) FindById(ctx context.Context, name string) (response.LectureResponse, error) {
+	lecture, err := s.lectureRepo.FindById(ctx, name)
 	//helper.PanicIfError(err)
 	lectureResponse := response.LectureResponse{
-		LectureId:    lecture.LectureId,
+		//LectureId:    lecture.LectureId,
 		LectureName:  lecture.LectureName,
 		StartYear:    lecture.StartYear,
 		EndYear:      lecture.EndYear,
@@ -61,7 +62,7 @@ func (s *LectureServiceImpl) FindById(ctx context.Context, idcourse int) (respon
 // Save implements CourseService.
 func (s *LectureServiceImpl) Create(ctx context.Context, request request.LectureCreateRequest) (bool, error) {
 	lecture := Model.Lectures{
-		LectureId:    request.LectureId,
+		//LectureId:    request.LectureId,
 		LectureName:  request.LectureName,
 		StartYear:    request.StartYear,
 		EndYear:      request.EndYear,
@@ -69,18 +70,26 @@ func (s *LectureServiceImpl) Create(ctx context.Context, request request.Lecture
 		ProfessorId:  request.ProfessorId,
 		DepartmentId: request.DepartmentId,
 	}
-	result, err := s.lectureRepo.Save(ctx, lecture)
-	return result, err
+	exists, err := s.lectureRepo.LectureExists(ctx, &lecture)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		result, err := s.lectureRepo.Save(ctx, lecture)
+		return result, err
+	} else {
+		return false, errors.New("lecture already exists")
+	}
 }
 
 // Update implements CourseService.
-func (s *LectureServiceImpl) Update(ctx context.Context, request request.LectureUpdateRequest) (bool, error) {
-	lecture, err := s.lectureRepo.FindById(ctx, request.LectureId)
+func (s *LectureServiceImpl) Update(ctx context.Context, request request.LectureUpdateRequest, name string) (bool, error) {
+	lecture, err := s.lectureRepo.FindById(ctx, name)
 	//helper.PanicIfError(err)
 	if err != nil {
 		return false, err
 	}
-	lecture.LectureName = request.LectureName
+	lecture.LectureName = name
 	lecture.StartYear = request.StartYear
 	lecture.EndYear = request.EndYear
 	lecture.Description = request.Description

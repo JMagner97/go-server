@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"go-server/Model"
 	"go-server/helper"
+
+	"github.com/lib/pq"
 )
 
 // struttura contenente un puntatore al db
@@ -26,7 +29,7 @@ func (s *repo_stud_impl) Delete(ctx context.Context, idstudent int) (bool, error
 	SQL := "Delete from students where studentid = $1"
 	_, errx := tx.ExecContext(ctx, SQL, idstudent)
 	if errx != nil {
-		return false, errx
+		return false, handleSQLError(errx)
 	} else {
 		return true, nil
 	}
@@ -54,42 +57,60 @@ func (s *repo_stud_impl) FindAll(ctx context.Context) []Model.Student {
 } //pagination
 
 // FindById implements StudentRepo.
-func (s *repo_stud_impl) FindById(ctx context.Context, idstudent int) (Model.Student, error) {
+func (s *repo_stud_impl) FindById(ctx context.Context, email string) (Model.Student, error) {
 	tx, err := s.Db.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommirOrRollback(tx)
-	SQL := "Select * from students where studentid = $1"
-	result, errx := tx.QueryContext(ctx, SQL, idstudent)
+	SQL := "Select * from students where email = $1"
+	result, errx := tx.QueryContext(ctx, SQL, email)
 	//helper.PanicIfError(errx)
 
 	student := Model.Student{}
 	if errx != nil {
-		return student, errx
+		return student, errors.New("student not found")
 	}
 	defer result.Close()
 	if result.Next() {
 		err := result.Scan(&student.Id, &student.Name, &student.Surname, &student.Birthdate, &student.Address, &student.Email, &student.DepartmentId)
 		//helper.PanicIfError(err)
-		return student, err
+		return student, handleSQLError(err)
 	} else {
 		return student, errors.New("student not found")
 	}
 
 }
 
+func (s *repo_stud_impl) StudentExists(ctx context.Context, student *Model.Student) (bool, error) {
+	var existingId int
+	err := s.Db.QueryRow("SELECT studentid FROM students WHERE email = $1", student.Email).Scan(&existingId)
+	if err == sql.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		return false, handleSQLError(err)
+	}
+	return existingId > 0, nil
+}
+
 // Save implements StudentRepo.
 func (s *repo_stud_impl) Save(ctx context.Context, student Model.Student) (bool, error) {
 	tx, err := s.Db.Begin()
 	if err != nil {
-		return false, err
+		return false, handleSQLError(err)
+	}
+
+	if err != nil {
+		return false, handleSQLError(err)
+	}
+	if err != nil {
+		return false, handleSQLError(err)
 	}
 	defer helper.CommirOrRollback(tx)
 
-	SQL := "insert into students(studentid,name,surname,birthdate,address,email,departmentid) values ($1,$2,$3,$4,$5,$6,$7)"
-	_, err = tx.ExecContext(ctx, SQL, student.Id, student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.DepartmentId)
+	SQL := "insert into students(name,surname,birthdate,address,email,departmentid) values ($1,$2,$3,$4,$5,$6)"
+	_, err = tx.ExecContext(ctx, SQL, student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.DepartmentId)
 
 	if err != nil {
-		return false, err
+		return false, handleSQLError(err)
 	} else {
 		return true, nil
 	}
@@ -103,16 +124,44 @@ func (s *repo_stud_impl) Update(ctx context.Context, student Model.Student) (boo
 	//var SQL string
 	//var args []interface{}
 	//if student.CourseId == 0 {
-	SQL := "update students set name=$1, surname=$2, birthdate=$3, address=$4, email=$5, departmentid=$6 where studentid=$7"
+	SQL := "update students set name=$1, surname=$2, birthdate=$3, address=$4, departmentid=$5 where email=$6"
 	//args = []interface{}{student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.CourseId, student.Id}
 	//	} else {
 	//		SQL = "update studenti set nome=$1, cognome=$2, datanascita=$3, indirizzo=$4, email=$5 where idstudente=$6"
 	//		args = []interface{}{student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.Id}
 	//	}
-	_, err = tx.ExecContext(ctx, SQL, student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.DepartmentId, student.Id)
+	res, err := tx.ExecContext(ctx, SQL, student.Name, student.Surname, student.Birthdate, student.Address, student.DepartmentId, student.Email)
+	count, errx := res.RowsAffected()
+	handleSQLError(errx)
+	if count == 0 {
+		return false, errors.New("student not found")
+	}
 	if err != nil {
-		return false, err
+		return false, handleSQLError(err)
 	} else {
 		return true, nil
 	}
+}
+func handleSQLError(err error) error {
+	if pgErr, ok := err.(*pq.Error); ok {
+		switch pgErr.Code {
+		case "23505":
+			return errors.New("a student with this email already exists")
+		case "23503":
+			return errors.New("foreign key violation")
+		case "23502":
+			return errors.New("not null violation")
+		case "23514":
+			return errors.New("check constraint violation")
+		case "22001":
+			return errors.New("string data right truncation")
+		case "22003":
+			return errors.New("numeric value out of range")
+		case "22012":
+			return errors.New("division by zero")
+		default:
+			return fmt.Errorf("database error: %w", pgErr)
+		}
+	}
+	return err
 }

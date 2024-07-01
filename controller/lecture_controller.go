@@ -6,7 +6,6 @@ import (
 	"go-server/service"
 	lecture "go-server/service/lectures"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -30,13 +29,13 @@ func (controller *LectureController) Create(writer http.ResponseWriter, requests
 		if result {
 			WebResponse := helper.WebResponse{
 				Status: "ok",
-				Data:   nil,
+				Data:   courseRequest,
 			}
 			helper.WriteResponse(writer, WebResponse, http.StatusCreated)
 		} else {
 			webRepo := helper.WebResponse{
-				Status: "Error during create",
-				Data:   errx,
+				//Status: "Error during create",
+				Status: errx.Error(),
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
 		}
@@ -54,11 +53,16 @@ func (controller *LectureController) Update(writer http.ResponseWriter, requests
 	if valid {
 		lectureUpdate := request.LectureUpdateRequest{}
 		helper.ReadRequestBody(requests, &lectureUpdate)
-		lectureid := params.ByName("lectureid")
-		id, err := strconv.Atoi(lectureid)
-		helper.PanicIfError(err)
-		lectureUpdate.LectureId = id
-		result, errx := controller.lectureService.Update(requests.Context(), lectureUpdate)
+		name := params.ByName("name")
+		if name == "" {
+			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Name is required",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
+		}
+		result, errx := controller.lectureService.Update(requests.Context(), lectureUpdate, name)
 		if result {
 			webRepo := helper.WebResponse{
 
@@ -69,10 +73,10 @@ func (controller *LectureController) Update(writer http.ResponseWriter, requests
 		} else {
 			webRepo := helper.WebResponse{
 
-				Status: "Error during update",
-				Data:   errx,
+				//Status: "Error during update",
+				Status: errx.Error(),
 			}
-			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		}
 	} else {
 		webRepo := helper.WebResponse{
@@ -87,10 +91,16 @@ func (controller *LectureController) Update(writer http.ResponseWriter, requests
 func (controller *LectureController) Delete(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
 	valid := service.CheckToken(requests)
 	if valid {
-		lectureid := params.ByName("lectureid")
-		id, err := strconv.Atoi(lectureid)
-		helper.PanicIfError(err)
-		result, errx := controller.lectureService.Delete(requests.Context(), id)
+		name := params.ByName("name")
+		if name == "" {
+			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Name is required",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
+		}
+		result, errx := controller.lectureService.Delete(requests.Context(), name)
 		if result {
 			webRepo := helper.WebResponse{
 				Status: "ok",
@@ -99,8 +109,8 @@ func (controller *LectureController) Delete(writer http.ResponseWriter, requests
 			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
 		} else {
 			webRepo := helper.WebResponse{
-				Status: "Error during delete",
-				Data:   errx,
+				//Status: "Error during delete",
+				Status: errx.Error(),
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
 		}
@@ -134,10 +144,16 @@ func (controller *LectureController) FindAll(writer http.ResponseWriter, request
 func (controller *LectureController) FindById(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
 	valid := service.CheckToken(requests)
 	if valid {
-		lectureid := params.ByName("lectureid")
-		id, err := strconv.Atoi(lectureid)
-		helper.PanicIfError(err)
-		result, errx := controller.lectureService.FindById(requests.Context(), id)
+		name := params.ByName("name")
+		if name == "" {
+			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Name is required",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
+		}
+		result, errx := controller.lectureService.FindById(requests.Context(), name)
 		if errx != nil {
 			webRepo := helper.WebResponse{
 				Status: "Lectures not found",
