@@ -139,3 +139,51 @@ func handleCourseSQLError(err error) error {
 	}
 	return err
 }
+
+func (s *lectureRepo) FindByIds(ctx context.Context, lecturename string, departmentname string) ([]model.DepartmentLecture, error) {
+	tx, err := s.db.Begin()
+	helper.PanicIfError(err)
+	defer helper.CommirOrRollback(tx)
+	department := model.Department{}
+	sql1 := "select departmentid, name from departments where name = $1"
+	err = tx.QueryRowContext(ctx, sql1, departmentname).Scan(
+		&department.DepartmentId, &department.Name)
+	if err == sql.ErrNoRows {
+		return []model.DepartmentLecture{}, errors.New("department not found")
+	} else if err != nil {
+		return []model.DepartmentLecture{}, handleSQLError(err)
+	}
+	lecture := model.Lectures{}
+	sql2 := "select * from lectures where name = $1"
+	err = tx.QueryRowContext(ctx, sql2, lecturename).Scan(
+		&lecture.LectureId, &lecture.LectureName, &lecture.Description, &lecture.ProfessorId, &lecture.DepartmentId, &lecture.StartYear, &lecture.EndYear,
+	)
+	if err == sql.ErrNoRows {
+		return []model.DepartmentLecture{}, errors.New("lecture not found")
+	} else if err != nil {
+		return []model.DepartmentLecture{}, handleSQLError(err)
+	}
+	SQL := `
+	select departments.name, lectures.name, lectures.description, lectures.startyear, lectures.endyear 
+	from departments 
+	join lectures on departments.departmentid = lectures.departmentid 
+	where departments.departmentid = $1 and lectures.lectureid = $2
+	`
+	var departmentLectures []model.DepartmentLecture
+	result, err := tx.QueryContext(ctx, SQL, &department.DepartmentId, &lecture.LectureId)
+	if err != nil {
+		return departmentLectures, err
+	}
+	defer result.Close()
+
+	for result.Next() {
+		departmentLecture := model.DepartmentLecture{}
+		err := result.Scan(&departmentLecture.Department.Name, &departmentLecture.Lectures.LectureName, &departmentLecture.Lectures.Description, &departmentLecture.Lectures.StartYear, &departmentLecture.Lectures.EndYear)
+		helper.PanicIfError(err)
+		departmentLectures = append(departmentLectures, departmentLecture)
+	}
+	if err != nil {
+		return departmentLectures, errors.New("DepartmentLectures not found")
+	}
+	return departmentLectures, nil
+}

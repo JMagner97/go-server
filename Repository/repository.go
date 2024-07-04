@@ -21,6 +21,7 @@ type LectureRepo interface {
 	FindById(ctx context.Context, name string) (model.Lectures, error)
 	FindAll(ctx context.Context) []model.Lectures
 	LectureExists(ctx context.Context, lecture *model.Lectures) (bool, error)
+	FindByIds(ctx context.Context, depname string, lectname string) ([]model.DepartmentLecture, error)
 }
 
 type StudentLectureRepo interface {
@@ -29,6 +30,10 @@ type StudentLectureRepo interface {
 	FindAll(ctx context.Context) []model.StudentLectures
 	EnrollmentExist(ctx context.Context, email string, name string) (bool, error)
 	FindById(ctx context.Context, email string, name string) (model.StudentLectures, error)
+}
+
+type DepartmentLectureRepo interface {
+	FindByIds(ctx context.Context, lecturename string, departmentname string) ([]model.DepartmentLecture, error)
 }
 
 type UserRepo interface {

@@ -33,7 +33,7 @@ func (controller *StudentController) Create(writer http.ResponseWriter, requests
 			webRepo := helper.WebResponse{
 				Status: err.Error(),
 			}
-			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			helper.WriteResponse(writer, webRepo, http.StatusConflict)
 		}
 	} else {
 		webRepo := helper.WebResponse{

@@ -13,6 +13,29 @@ type LectureServiceImpl struct {
 	lectureRepo repository.LectureRepo
 }
 
+// FindByIds implements LectureService.
+func (s *LectureServiceImpl) FindByIds(ctx context.Context, lecname string, depname string) ([]*Model.DepartmentLecture, error) {
+	result, err := s.lectureRepo.FindByIds(ctx, lecname, depname)
+	var responses []*Model.DepartmentLecture
+	for _, value := range result {
+		departmentlec := &Model.DepartmentLecture{
+			Department: Model.Department{
+				Name: value.Department.Name,
+			},
+			Lectures: Model.Lectures{
+				LectureName: value.Lectures.LectureName,
+				Description: value.Lectures.Description,
+				StartYear:   value.Lectures.StartYear,
+				EndYear:     value.Lectures.EndYear,
+			},
+		}
+		responses = append(responses, departmentlec)
+	}
+
+	// Return the response
+	return responses, err
+}
+
 // Delete implements CourseService.
 func (s *LectureServiceImpl) Delete(ctx context.Context, name string) (bool, error) {
 	lecture, err := s.lectureRepo.FindById(ctx, name)

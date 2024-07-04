@@ -30,6 +30,7 @@ func NewRouter(studenController *controller.StudentController, lecturesControlle
 	router.POST("/api/lecture", lecturesController.Create)
 	router.PATCH("/api/lecture/:name", lecturesController.Update)
 	router.DELETE("/api/lecture/:name", lecturesController.Delete)
+	router.GET("/lecture/:departmentName/:lectureName", lecturesController.FindByIds)
 	router.POST("/login", wrapHandler(controller.LoginHandlerToken))
 	router.POST("/SignUp", wrapHandler((controller.SignUp)))
 	router.POST("/logout", wrapHandler(controller.LogoutHandler))

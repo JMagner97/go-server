@@ -2,6 +2,7 @@ package controller
 
 import (
 	"go-server/data/request"
+	"go-server/data/response"
 	"go-server/helper"
 	"go-server/service"
 	lecture "go-server/service/lectures"
@@ -37,13 +38,59 @@ func (controller *LectureController) Create(writer http.ResponseWriter, requests
 				//Status: "Error during create",
 				Status: errx.Error(),
 			}
-			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			helper.WriteResponse(writer, webRepo, http.StatusConflict)
 		}
 	} else {
 		webRepo := helper.WebResponse{
 			Status: "Error token not valid",
 		}
 
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
+	}
+}
+
+func (controller *LectureController) FindByIds(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
+	valid := service.CheckToken(requests)
+	if valid {
+		departmentname := params.ByName("departmentName")
+		lecturename := params.ByName("lectureName")
+		if departmentname == "" || lecturename == "" {
+			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Department name and lecture name are required",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
+		}
+		result, errx := controller.lectureService.FindByIds(requests.Context(), lecturename, departmentname)
+		if errx != nil {
+			webRepo := helper.WebResponse{
+				Status: "error",
+				Data:   errx.Error(),
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
+			return
+		}
+		var responses []response.DepartmentLectureResponse
+		for i := 0; i < len(result); i++ {
+			responsedeplec := response.DepartmentLectureResponse{
+				DepartmentName: result[i].Department.Name,
+				LectureName:    result[i].Lectures.LectureName,
+				Description:    result[i].Lectures.Description,
+				StartYear:      result[i].Lectures.StartYear,
+				EndYear:        result[i].Lectures.EndYear,
+			}
+			responses = append(responses, responsedeplec)
+		}
+		webRepo := helper.WebResponse{
+			Status: "ok",
+			Data:   responses,
+		}
+		helper.WriteResponse(writer, webRepo, http.StatusOK)
+	} else {
+		webRepo := helper.WebResponse{
+			Status: "Error token not valid",
+		}
 		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }

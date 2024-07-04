@@ -60,7 +60,7 @@ func (controller *LectureStudentController) Create(writer http.ResponseWriter, r
 				//Status: "Error during insert",
 				Status: errx.Error(),
 			}
-			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			helper.WriteResponse(writer, webRepo, http.StatusConflict)
 		}
 	} else {
 		webRepo := helper.WebResponse{

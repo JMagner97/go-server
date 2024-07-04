@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	host     = "localhost"
+	host     = "localhost" //"host.docker.internal"
 	port     = 5432
 	user     = "lorenzomagnano"
 	password = "admin"
@@ -49,6 +49,13 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	//connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	//	os.Getenv("DB_HOST"),
+	//	os.Getenv("DB_PORT"),
+	//	os.Getenv("DB_USER"),
+	//	os.Getenv("DB_PASSWORD"),
+	//	os.Getenv("DB_NAME"))
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d  dbname=%s user=%s password=%s sslmode=disable",
 		host, port, dbname, user, password)
 
@@ -70,6 +77,7 @@ func main() {
 
 	//studentRepo := repository.StudentRepo.
 	//repository
+
 	studentRepo := repository.NewStudRepo(db)
 	lectureRepo := repository.NewLectureRepo(db)
 	enrollmentRepo := repository.NewStudentLectureRepo(db)
@@ -81,18 +89,23 @@ func main() {
 	studentController := controller.NewStudentController(studentService)
 	lecturesController := controller.NewLecturesController(lecturesService)
 	enrollmentController := controller.NewStudentLectureController(enrollmentService)
+
 	routes := route.NewRouter(studentController, lecturesController, enrollmentController)
 
-	server := http.Server{Addr: "localhost:8888", Handler: routes}
+	server := http.Server{Addr: "0.0.0.0:8080", Handler: routes}
+
 	errx := server.ListenAndServe()
+	if errx != nil {
+		log.Fatal("ListenAndServe: ", errx)
+	}
 	helper.PanicIfError(errx)
 	fileServer := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fileServer)
 	http.HandleFunc("/form", formHandler)
 	http.HandleFunc("/hello", helloHandler)
 
-	fmt.Println("Starting server at port 8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	}
+	//fmt.Println("Starting server at port 8080")
+	//if err := http.ListenAndServe(":8080", nil); err != nil {
+	//	log.Fatal(err)
+	//}
 }
