@@ -11,18 +11,19 @@ import (
 	"go-server/service/lectures"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost" //"host.docker.internal"
-	port     = 5432
-	user     = "lorenzomagnano"
-	password = "admin"
-	dbname   = "provadb"
-)
+//const (
+//	host     = "localhost" //"host.docker.internal"
+//	port     = 5432
+//	user     = "lorenzomagnano"
+//	password = "admin"
+//	dbname   = "provadb"
+//)
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/hello" {
@@ -49,19 +50,19 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	//connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-	//	os.Getenv("DB_HOST"),
-	//	os.Getenv("DB_PORT"),
-	//	os.Getenv("DB_USER"),
-	//	os.Getenv("DB_PASSWORD"),
-	//	os.Getenv("DB_NAME"))
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"))
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d  dbname=%s user=%s password=%s sslmode=disable",
-		host, port, dbname, user, password)
+	//psqlInfo := fmt.Sprintf("host=%s port=%d  dbname=%s user=%s password=%s sslmode=disable",
+	//	host, port, dbname, user, password)
 
-	fmt.Println("Connection string:", psqlInfo)
+	fmt.Println("Connection string:", connStr)
 
-	db, err := repository.NewDatabase("postgres", psqlInfo)
+	db, err := repository.NewDatabase("postgres", connStr)
 
 	if err != nil {
 		log.Fatalf("Error opening database: %v\n", err)
@@ -91,11 +92,12 @@ func main() {
 	enrollmentController := controller.NewStudentLectureController(enrollmentService)
 
 	routes := route.NewRouter(studentController, lecturesController, enrollmentController)
-
+	fmt.Println("Sto qui per il server")
 	server := http.Server{Addr: "0.0.0.0:8080", Handler: routes}
 
 	errx := server.ListenAndServe()
 	if errx != nil {
+		fmt.Println("Sto in errore", errx)
 		log.Fatal("ListenAndServe: ", errx)
 	}
 	helper.PanicIfError(errx)

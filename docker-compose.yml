@@ -5,29 +5,44 @@ services:
     build: .
     container_name: goserver
     ports:
-      - "8080:8888"
+      - "8888:8080"
     depends_on:
       - db
     environment:
       DB_HOST: host.docker.internal
-      DB_PORT: 5432
+      DB_PORT: 5431 
       DB_USER: lorenzomagnano
       DB_PASSWORD: admin
       DB_NAME: provadb
-  db:
-    image: postgres
-    container_name: postgres_db
-    environment:
-      POSTGRES_DB: provadb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
 
-networks:
-  app-network: 
+  db:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: provadb
+      POSTGRES_USER: lorenzomagnano
+      POSTGRES_PASSWORD: admin
+    networks:
+      - app-network
+    ports: 
+      - "5431:5432" 
+  pgadmin:
+      image: dpage/pgadmin4
+      container_name: pgadmin4
+      depends_on:
+       - db
+      ports: 
+       - "5050:80"
+      restart: always
+      environment: 
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: root
+      networks:
+        - app-network
 
-volumes:
-  postgres_data:
+networks:
+  app-network:
+
