@@ -2,8 +2,9 @@ package repository
 
 import (
 	"database/sql"
-	utility "go-server/Utility"
+	en "go-server/EnumRole"
 	"go-server/helper"
+	utility "go-server/utility"
 )
 
 // struttura contenente un puntatore al db
@@ -56,11 +57,11 @@ func (s *repo_user) UpdateToken(username string, token string) bool {
 	return err != nil
 }
 
-func (s *repo_user) VerifyCredentials(username string, password string) bool {
+func (s *repo_user) VerifyCredentials(username string, password string) int {
 	tx, err := s.Db.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommirOrRollback(tx) // Corrected function name
-	SQL := "Select COUNT(*) as us from users where username =$1 and password =$2"
+	SQL := "Select roleid as us from users where username =$1 and password =$2"
 	result, err := tx.Query(SQL, username, password) // Corrected receiver
 	helper.PanicIfError(err)
 	defer result.Close()
@@ -68,11 +69,19 @@ func (s *repo_user) VerifyCredentials(username string, password string) bool {
 		var us int
 		err := result.Scan(&us)
 		helper.PanicIfError(err)
-		if us == 1 {
-			return true
+		switch us {
+		case 1:
+			return en.Admin
+		case 2:
+			return en.Professor
+		case 3:
+			return en.Student
+		default:
+			return en.Unknown
 		}
+
 	}
-	return false
+	return en.Unknown
 }
 
 func (s *repo_user) VerifyIsAuthenticated(tokenString string) bool {

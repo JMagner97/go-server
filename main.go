@@ -9,21 +9,21 @@ import (
 	"go-server/service"
 	"go-server/service/enrollment"
 	"go-server/service/lectures"
+	professorservice "go-server/service/professor_service"
 	"log"
 	"net/http"
-	"os"
 
 	_ "github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 )
 
-//const (
-//	host     = "localhost" //"host.docker.internal"
-//	port     = 5432
-//	user     = "lorenzomagnano"
-//	password = "admin"
-//	dbname   = "provadb"
-//)
+const (
+	host     = "localhost" //"host.docker.internal"
+	port     = 5432
+	user     = "lorenzomagnano"
+	password = "admin"
+	dbname   = "provadb"
+)
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/hello" {
@@ -50,19 +50,19 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"))
+	//connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	//	os.Getenv("DB_HOST"),
+	//	os.Getenv("DB_PORT"),
+	//	os.Getenv("DB_USER"),
+	//	os.Getenv("DB_PASSWORD"),
+	//	os.Getenv("DB_NAME"))
 
-	//psqlInfo := fmt.Sprintf("host=%s port=%d  dbname=%s user=%s password=%s sslmode=disable",
-	//	host, port, dbname, user, password)
+	psqlInfo := fmt.Sprintf("host=%s port=%d  dbname=%s user=%s password=%s sslmode=disable",
+		host, port, dbname, user, password)
 
-	fmt.Println("Connection string:", connStr)
+	fmt.Println("Connection string:", psqlInfo)
 
-	db, err := repository.NewDatabase("postgres", connStr)
+	db, err := repository.NewDatabase("postgres", psqlInfo)
 
 	if err != nil {
 		log.Fatalf("Error opening database: %v\n", err)
@@ -82,16 +82,19 @@ func main() {
 	studentRepo := repository.NewStudRepo(db)
 	lectureRepo := repository.NewLectureRepo(db)
 	enrollmentRepo := repository.NewStudentLectureRepo(db)
+	professorRepo := repository.NewProfessorRepo(db)
 	//servizio
 	studentService := service.NewStudentServiceImpl(studentRepo)
 	lecturesService := lectures.NewLectureServiceImpl(lectureRepo)
 	enrollmentService := enrollment.NewStudentLectureServiceImpl(enrollmentRepo)
+	professorService := professorservice.NewProfessorService(professorRepo)
 	//controller
 	studentController := controller.NewStudentController(studentService)
 	lecturesController := controller.NewLecturesController(lecturesService)
 	enrollmentController := controller.NewStudentLectureController(enrollmentService)
+	professorController := controller.NewProfessorsController(professorService)
 
-	routes := route.NewRouter(studentController, lecturesController, enrollmentController)
+	routes := route.NewRouter(studentController, lecturesController, enrollmentController, professorController)
 	fmt.Println("Sto qui per il server")
 	server := http.Server{Addr: "0.0.0.0:8080", Handler: routes}
 

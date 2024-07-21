@@ -2,11 +2,11 @@ package controller
 
 import (
 	"fmt"
+	En "go-server/EnumRole"
 	repository "go-server/Repository"
-	utility "go-server/Utility"
 	helper "go-server/helper"
+	utility "go-server/utility"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gorilla/sessions"
@@ -16,8 +16,6 @@ var users = map[string]string{
 	"Mac":   "admin",
 	"admin": "password",
 }
-
-var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
@@ -31,7 +29,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if originalPassword, ok := users[username]; ok {
 		fmt.Println("Password inserita dall'utente:", password)
 		fmt.Println("Password memorizzata nell'oggetto users:", originalPassword)
-		session, _ := Store.Get(r, "session.id")
+		session, _ := utility.Store.Get(r, "session.id")
 		if password == originalPassword {
 			session.Values["authenticated"] = true
 			session.Save(r, w)
@@ -54,18 +52,28 @@ func LoginHandlerToken(w http.ResponseWriter, r *http.Request) {
 	password := r.PostForm.Get("password")
 	db := repository.GetDatabaseInstance()
 	user_repo := repository.NewUserRepo(db)
-	verified := repository.UserRepo.VerifyCredentials(user_repo, username, password)
+	verifiedRole := repository.UserRepo.VerifyCredentials(user_repo, username, password)
 	fmt.Println("Username:", username)
 	fmt.Println("Password:", password)
-	if verified {
+	if verifiedRole != En.Unknown {
 
 		fmt.Println("Password inserita dall'utente:", password)
-		tokenString, err := utility.GenerateJWTToken(username)
+		tokenString, _ := utility.GenerateJWTToken(username)
 		repository.UserRepo.UpdateToken(user_repo, username, tokenString)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+		session, _ := utility.Store.New(r, "idsession")
+		session.Options = &sessions.Options{
+			MaxAge:   3600, // 1 ora
+			HttpOnly: true, // Più sicuro
+		}
+		session.Values = map[interface{}]interface{}{} // Pulisce i vecchi valori
+		session.Values["role"] = verifiedRole          // Salva solo il ruolo attuale
+		session.Values["token"] = tokenString          // Salva anche il token
+		errx := session.Save(r, w)
+		if errx != nil {
+			http.Error(w, errx.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		webResponse := helper.WebResponse{
 			Status: "ok",
 			Data: map[string]string{
@@ -75,33 +83,36 @@ func LoginHandlerToken(w http.ResponseWriter, r *http.Request) {
 		helper.WriteResponse(w, webResponse, http.StatusOK)
 
 	} else {
-		http.Error(w, "user is not found or invalid password", http.StatusNotFound)
+		http.Error(w, "user is not found or invalid password", http.StatusUnauthorized)
 		return
 	}
 
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	db := repository.GetDatabaseInstance()
-	user_repo := repository.NewUserRepo(db)
+	//db := repository.GetDatabaseInstance()
+	//user_repo := repository.NewUserRepo(db)
 	reqtoken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqtoken, "Bearer ")
 
 	lentoken := len(splitToken)
 	if lentoken > 1 {
-		verified := repository.UserRepo.Logout(user_repo, splitToken[1])
-		if verified {
-			webRepo := helper.WebResponse{
-				Status: "ok",
-			}
-			helper.WriteResponse(w, webRepo, http.StatusOK)
-		} else {
-			webRepo := helper.WebResponse{
-				Status: "Error",
-			}
+		session, _ := utility.Store.Get(r, "idsession")
+		session.Values = map[interface{}]interface{}{}
+		session.Save(r, w)
+		//verified := repository.UserRepo.Logout(user_repo, splitToken[1])
+		// if verified {
+		// 	webRepo := helper.WebResponse{
+		// 		Status: "ok",
+		// 	}
+		// 	helper.WriteResponse(w, webRepo, http.StatusOK)
+		// } else {
+		// 	webRepo := helper.WebResponse{
+		// 		Status: "Error",
+		// 	}
 
-			helper.WriteResponse(w, webRepo, http.StatusBadRequest)
-		}
+		// 	helper.WriteResponse(w, webRepo, http.StatusBadRequest)
+		// }
 	} else {
 		webRepo := helper.WebResponse{
 			Status: "Error",

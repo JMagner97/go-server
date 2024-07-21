@@ -22,6 +22,9 @@ func (b *StudentServiceImpl) Create(ctx context.Context, request request.Student
 	student := Model.Student{
 		Name: request.Name,
 		//Id:           request.Id,
+		Username:     request.Username,
+		Password:     request.Password,
+		Role:         1,
 		Surname:      request.Surname,
 		Birthdate:    request.Data,
 		Email:        request.Email,
@@ -67,6 +70,7 @@ func (b *StudentServiceImpl) FindById(ctx context.Context, email string) (respon
 	//helper.PanicIfError(err)
 	studentResponse := response.StudentResponse{
 		//Id:           student.Id,
+		Username:     student.Username,
 		Name:         student.Name,
 		Surname:      student.Surname,
 		Data:         student.Birthdate,

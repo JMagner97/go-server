@@ -14,6 +14,11 @@ type StudentRepo interface {
 	StudentExists(ctx context.Context, student *model.Student) (bool, error)
 }
 
+type ProfessorRepo interface {
+	Save(ctx context.Context, professor model.Professor) (bool, error)
+	ProfessorExists(ctx context.Context, professor *model.Professor) (bool, error)
+}
+
 type LectureRepo interface {
 	Save(ctx context.Context, lecture model.Lectures) (bool, error)
 	Update(ctx context.Context, lecture model.Lectures) (bool, error)
@@ -37,7 +42,7 @@ type DepartmentLectureRepo interface {
 }
 
 type UserRepo interface {
-	VerifyCredentials(username string, password string) bool
+	VerifyCredentials(username string, password string) int
 	VerifyIsAuthenticated(tokenString string) bool
 	UpdateToken(username string, token string) bool
 	Logout(tokenString string) bool

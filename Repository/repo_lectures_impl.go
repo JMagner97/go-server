@@ -99,7 +99,9 @@ func (s *lectureRepo) Update(ctx context.Context, lectures model.Lectures) (bool
 	defer helper.CommirOrRollback(tx)
 	sql := "update lectures set startyear=$1, endyear=$2, description=$3, professorid=$4, departmentid=$5 where name=$6"
 	res, err := tx.ExecContext(ctx, sql, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId, lectures.DepartmentId, lectures.LectureName)
-	helper.PanicIfError(err)
+	if err != nil {
+		return false, errors.New("error during update")
+	}
 	count, errx := res.RowsAffected()
 	handleCourseSQLError(errx)
 	if count == 0 {

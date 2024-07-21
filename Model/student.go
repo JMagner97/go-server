@@ -5,6 +5,9 @@ import (
 )
 
 type Student struct {
+	Username     string
+	Password     string
+	Role         int
 	Id           int
 	Name         string
 	Surname      string

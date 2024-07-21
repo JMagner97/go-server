@@ -93,27 +93,35 @@ func (s *repo_stud_impl) StudentExists(ctx context.Context, student *Model.Stude
 
 // Save implements StudentRepo.
 func (s *repo_stud_impl) Save(ctx context.Context, student Model.Student) (bool, error) {
-	tx, err := s.Db.Begin()
+	// Inizia una transazione
+	tx, err := s.Db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, handleSQLError(err)
+	}
+	defer tx.Rollback() // Assicurati che la transazione sia annullata in caso di errore
+
+	// Prima, inserisci l'utente nella tabella Users e ottieni l'userID generato
+	userSQL := "INSERT INTO users(username, password, roleID) VALUES ($1, $2, $3) RETURNING userID"
+	var userID int
+	err = tx.QueryRowContext(ctx, userSQL, student.Username, student.Password, student.Role).Scan(&userID)
 	if err != nil {
 		return false, handleSQLError(err)
 	}
 
+	// Poi, inserisci lo studente nella tabella Students con userID ottenuto
+	studentSQL := "INSERT INTO students(studentID, name, surname, birthDate, address, email, departmentID) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+	_, err = tx.ExecContext(ctx, studentSQL, userID, student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.DepartmentId)
 	if err != nil {
 		return false, handleSQLError(err)
 	}
-	if err != nil {
-		return false, handleSQLError(err)
-	}
-	defer helper.CommirOrRollback(tx)
 
-	SQL := "insert into students(name,surname,birthdate,address,email,departmentid) values ($1,$2,$3,$4,$5,$6)"
-	_, err = tx.ExecContext(ctx, SQL, student.Name, student.Surname, student.Birthdate, student.Address, student.Email, student.DepartmentId)
-
+	// Se tutto va bene, conferma la transazione
+	err = tx.Commit()
 	if err != nil {
 		return false, handleSQLError(err)
-	} else {
-		return true, nil
 	}
+
+	return true, nil
 }
 
 // Update implements StudentRepo.

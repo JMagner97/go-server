@@ -14,7 +14,7 @@ func wrapHandler(handler http.HandlerFunc) httprouter.Handle {
 	}
 }
 
-func NewRouter(studenController *controller.StudentController, lecturesController *controller.LectureController, enrollmentController *controller.LectureStudentController) *httprouter.Router {
+func NewRouter(studenController *controller.StudentController, lecturesController *controller.LectureController, enrollmentController *controller.LectureStudentController, professorController *controller.ProfessorController) *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Fprint(w, "Welcome Home")
@@ -23,6 +23,7 @@ func NewRouter(studenController *controller.StudentController, lecturesControlle
 	router.GET("/api/student", studenController.FindAll)
 	router.GET("/api/student/:email", studenController.FindById)
 	router.POST("/api/student", studenController.Create)
+	router.POST("/api/professor", wrapHandler(professorController.Create))
 	router.PATCH("/api/student/:email", studenController.Update)
 	router.DELETE("/api/student/:email", studenController.Delete)
 	router.GET("/api/lecture", lecturesController.FindAll)
