@@ -2,14 +2,40 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	en "go-server/EnumRole"
+	utility "go-server/Utility"
 	"go-server/helper"
-	utility "go-server/utility"
 )
 
 // struttura contenente un puntatore al db
 type repo_user struct {
 	Db *sql.DB
+}
+
+// CheckUserRole implements UserRepo.
+// CheckUserRole implements UserRepo.
+func (s *repo_user) CheckUserRole(token string) (int, error) {
+	tx, err := s.Db.Begin()
+	helper.PanicIfError(err)
+	query := `SELECT roleid as us FROM users
+	where token = $1`
+	fmt.Println(token)
+	result, err := tx.Query(query, token)
+	defer helper.CommirOrRollback(tx)
+	defer result.Close()
+	if err != nil {
+		return 0, fmt.Errorf("error querying user role: %v", err)
+	}
+	var us int
+	for result.Next() {
+
+		result.Scan(&us)
+	}
+	if us == 0 {
+		return 0, fmt.Errorf("internal error")
+	}
+	return us, nil
 }
 
 func NewUserRepo(Db *sql.DB) UserRepo {
@@ -71,11 +97,11 @@ func (s *repo_user) VerifyCredentials(username string, password string) int {
 		helper.PanicIfError(err)
 		switch us {
 		case 1:
-			return en.Admin
+			return en.Student
 		case 2:
 			return en.Professor
 		case 3:
-			return en.Student
+			return en.Admin
 		default:
 			return en.Unknown
 		}

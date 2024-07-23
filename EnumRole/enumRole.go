@@ -1,16 +1,16 @@
-package enumrole
+package Enumrole
 
 import (
 	"net/http"
 
-	st "go-server/utility"
+	st "go-server/Utility"
 )
 
 type Role int
 
 const (
-	Professor = iota + 1
-	Student
+	Student = iota + 1
+	Professor
 	Admin
 	Unknown
 )

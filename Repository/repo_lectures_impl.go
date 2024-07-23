@@ -83,7 +83,7 @@ func (s *lectureRepo) Save(ctx context.Context, lectures model.Lectures) (bool, 
 
 	SQL := "insert into lectures(name, startyear, endyear, description, professorid, departmentid) values ($1,$2,$3,$4,$5,$6)"
 	_, err = tx.ExecContext(ctx, SQL, lectures.LectureName, lectures.StartYear, lectures.EndYear, lectures.Description, lectures.ProfessorId, lectures.DepartmentId)
-	helper.PanicIfError(err)
+	//helper.PanicIfError(err)
 
 	if err != nil {
 		return false, handleCourseSQLError(err)

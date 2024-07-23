@@ -1,4 +1,4 @@
-package utility
+package Utility
 
 import (
 	"github.com/gorilla/sessions"

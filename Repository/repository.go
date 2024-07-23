@@ -48,4 +48,5 @@ type UserRepo interface {
 	Logout(tokenString string) bool
 	Signup(username string, password string) (bool, error)
 	VerifyUsername(username string) bool
+	CheckUserRole(token string) (int, error)
 }

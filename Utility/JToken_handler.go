@@ -1,4 +1,4 @@
-package utility
+package Utility
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func IsValidToken(tokenString string) (*UserAuthentication, error, bool) {
 		return nil, err, false
 	}
 	if !token.Valid {
-		return nil, fmt.Errorf("Invalid token"), false
+		return nil, fmt.Errorf("invalid token"), false
 	}
 	return userAuth, nil, true
 }

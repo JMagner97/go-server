@@ -1,0 +1,18 @@
+FROM golang:1.21.6-alpine as debug
+RUN apk update && apk upgrade && \
+    apk add --no-cache git dpkg gcc musl-dev
+
+WORKDIR /go/src/work
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -gcflags="all=-N -l" -o server
+
+###########START NEW IMAGE###################
+
+FROM alpine:3.9 as prod
+COPY --from=debug /go/src/work/server /server
+CMD ["/server"]

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	en "go-server/EnumRole"
 	"go-server/data/request"
 	"go-server/helper"
 	"go-server/service"
@@ -46,54 +45,56 @@ func (controller *StudentController) Create(writer http.ResponseWriter, requests
 }
 
 func (controller *StudentController) Update(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
-	if !en.IsProfessor(requests) {
-		valid := service.CheckToken(requests)
-		if valid {
-			studentUpdate := request.StudentUpdateRequest{}
-			helper.ReadRequestBody(requests, &studentUpdate)
-			email := params.ByName("email")
-			if email == "" {
-				webRepo := helper.WebResponse{
-					Status: "Error",
-					Data:   "Email is required",
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
-				return
+	// if !en.IsProfessor(requests) {
+	valid := service.CheckToken(requests)
+	if valid {
+		studentUpdate := request.StudentUpdateRequest{}
+		helper.ReadRequestBody(requests, &studentUpdate)
+		email := params.ByName("email")
+		if email == "" {
+			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Email is required",
 			}
-			//studentUpdate.Id = id
-			result, errx := controller.StudentService.Update(requests.Context(), studentUpdate, email)
-			if result {
-				webRepo := helper.WebResponse{
-
-					Status: "created",
-					Data:   studentUpdate,
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusNoContent)
-			} else {
-				webRepo := helper.WebResponse{
-
-					//Status: "Error during update",
-					Status: errx.Error(),
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusNotFound)
-			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
 		}
+		//studentUpdate.Id = id
+		result, errx := controller.StudentService.Update(requests.Context(), studentUpdate, email)
+		if result {
+			webRepo := helper.WebResponse{
+
+				Status: "created",
+				Data:   studentUpdate,
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusNoContent)
+		} else {
+			webRepo := helper.WebResponse{
+
+				//Status: "Error during update",
+				Status: errx.Error(),
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
+		}
+	} else {
 		webRepo := helper.WebResponse{
 
 			Status: "Error token not valid",
 		}
 
 		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
-	} else {
-
-		webRepo := helper.WebResponse{
-
-			Status: "This is not your role",
-		}
-
-		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
 }
+
+// else {
+
+// 	webRepo := helper.WebResponse{
+
+// 		Status: "This is not your role",
+// 	}
+
+// 	helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
+// }
 
 func (controller *StudentController) Delete(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
 
@@ -132,74 +133,74 @@ func (controller *StudentController) Delete(writer http.ResponseWriter, requests
 }
 
 func (controller *StudentController) FindAll(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
-	if !en.IsProfessor(requests) {
+	//if !en.IsProfessor(requests) {
 
-		valid := service.CheckToken(requests)
-		if valid {
-			result := controller.StudentService.FindAll(requests.Context())
+	valid := service.CheckToken(requests)
+	if valid {
+		result := controller.StudentService.FindAll(requests.Context())
+		webRepo := helper.WebResponse{
+			Status: "ok",
+			Data:   result,
+		}
+		helper.WriteResponse(writer, webRepo, http.StatusOK)
+	} else {
+		webRepo := helper.WebResponse{
+
+			Status: "Error token not valid",
+		}
+
+		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
+	}
+
+	// } else {
+	// 	webRepo := helper.WebResponse{
+
+	// 		Status: "This is not your role",
+	// 	}
+
+	// 	helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
+	// }
+}
+
+func (controller *StudentController) FindById(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
+	//if !en.IsProfessor(requests) {
+	valid := service.CheckToken(requests)
+	if valid {
+		email := params.ByName("email")
+		if email == "" {
 			webRepo := helper.WebResponse{
+				Status: "Error",
+				Data:   "Email is required",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
+			return
+		}
+		result, errx := controller.StudentService.FindById(requests.Context(), email)
+		if errx != nil {
+			webRepo := helper.WebResponse{
+				Status: "Student not found",
+			}
+			helper.WriteResponse(writer, webRepo, http.StatusNotFound)
+		} else {
+			webRepo := helper.WebResponse{
+
 				Status: "ok",
 				Data:   result,
 			}
 			helper.WriteResponse(writer, webRepo, http.StatusOK)
-		} else {
-			webRepo := helper.WebResponse{
-
-				Status: "Error token not valid",
-			}
-
-			helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 		}
-
 	} else {
 		webRepo := helper.WebResponse{
-
-			Status: "This is not your role",
+			Status: "Error token not valid",
 		}
 
 		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
 	}
-}
+	// } else {
+	// 	webRepo := helper.WebResponse{
+	// 		Status: "This is not your role",
+	// 	}
 
-func (controller *StudentController) FindById(writer http.ResponseWriter, requests *http.Request, params httprouter.Params) {
-	if !en.IsProfessor(requests) {
-		valid := service.CheckToken(requests)
-		if valid {
-			email := params.ByName("email")
-			if email == "" {
-				webRepo := helper.WebResponse{
-					Status: "Error",
-					Data:   "Email is required",
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusBadRequest)
-				return
-			}
-			result, errx := controller.StudentService.FindById(requests.Context(), email)
-			if errx != nil {
-				webRepo := helper.WebResponse{
-					Status: "Student not found",
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusNotFound)
-			} else {
-				webRepo := helper.WebResponse{
-
-					Status: "ok",
-					Data:   result,
-				}
-				helper.WriteResponse(writer, webRepo, http.StatusOK)
-			}
-		} else {
-			webRepo := helper.WebResponse{
-				Status: "Error token not valid",
-			}
-
-			helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
-		}
-	} else {
-		webRepo := helper.WebResponse{
-			Status: "This is not your role",
-		}
-
-		helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
-	}
+	// 	helper.WriteResponse(writer, webRepo, http.StatusUnauthorized)
+	// }
 }

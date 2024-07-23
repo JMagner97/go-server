@@ -1,19 +1,84 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    container_name: goserver
+  traefik:
+    image: traefik:v2.3
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
     ports:
-      - "8888:8080"
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./traefik1.yml/traefik.yml:/etc/traefik/traefik.yml"
+
+  student-app:
+    build:
+      context: .
+      dockerfile: dockerfile.student
+    container_name: student-app
     depends_on:
       - db
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.student-app.rule=Host(`student.local`)"
+      - "traefik.http.services.student-app.loadbalancer.server.port=8080"
     environment:
-      DB_HOST: host.docker.internal
-      DB_PORT: 5431 
+      APP_ROLE: 1 #student
+      DB_HOST: postgres_db
+      DB_PORT: 5432
       DB_USER: lorenzomagnano
       DB_PASSWORD: admin
       DB_NAME: provadb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8889:8080"
+      - "2345:2345"
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+  
+
+  professor-app:
+    build:
+      context: .
+      dockerfile: dockerfile.professor
+    container_name: professor-app
+    depends_on:
+      - db
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.professor-app.rule=Host(`professor.local`)"
+      - "traefik.http.services.professor-app.loadbalancer.server.port=8080"
+    environment:
+      APP_ROLE: 2 #Professor
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_USER: lorenzomagnano
+      DB_PASSWORD: admin
+      DB_NAME: provadb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8890:8080"
+      - "2346:2346"
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+   
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
     networks:
       - app-network
 
@@ -27,22 +92,23 @@ services:
       POSTGRES_PASSWORD: admin
     networks:
       - app-network
-    ports: 
-      - "5431:5432" 
+    ports:
+      - "5432:5432"
+
   pgadmin:
-      image: dpage/pgadmin4
-      container_name: pgadmin4
-      depends_on:
-       - db
-      ports: 
-       - "5050:80"
-      restart: always
-      environment: 
-        PGADMIN_DEFAULT_EMAIL: admin@admin.com
-        PGADMIN_DEFAULT_PASSWORD: root
-      networks:
-        - app-network
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    depends_on:
+      - db
+    ports:
+      - "5050:80"
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    networks:
+      - app-network
 
 networks:
   app-network:
-
+    driver: bridge
